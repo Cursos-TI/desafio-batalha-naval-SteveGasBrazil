@@ -1,0 +1,118 @@
+// Batalha Naval - Nível Novato
+// Objetivo: posicionar 2 navios (1 horizontal, 1 vertical) em um tabuleiro 2D
+// e exibir as coordenadas (X,Y) de cada parte dos navios.
+//
+// Compilar: gcc -Wall -Wextra -O2 batalha_novato.c -o batalha_novato
+// Executar: ./batalha_novato
+
+#include <stdio.h>
+#include <stdbool.h>
+
+#define ROWS 8
+#define COLS 8
+
+#define ORIENT_H 0
+#define ORIENT_V 1
+
+// Convenção de coordenadas para exibição:
+// X = coluna (1..COLS), Y = linha (1..ROWS)
+
+bool place_ship(int board[ROWS][COLS], int startX, int startY, int length, int orientation) {
+    // startX e startY são 1-based para ficar intuitivo ao ler/ajustar no código
+    // Convertemos para 0-based para indexar a matriz.
+    int x0 = startX - 1;
+    int y0 = startY - 1;
+
+    // Verificação simples de limites:
+    if (orientation == ORIENT_H) {
+        if (x0 < 0 || x0 + length > COLS || y0 < 0 || y0 >= ROWS) return false;
+        // Checa sobreposição
+        for (int dx = 0; dx < length; dx++) {
+            if (board[y0][x0 + dx] != 0) return false;
+        }
+        // Posiciona
+        for (int dx = 0; dx < length; dx++) {
+            board[y0][x0 + dx] = 1;
+        }
+    } else { // ORIENT_V
+        if (y0 < 0 || y0 + length > ROWS || x0 < 0 || x0 >= COLS) return false;
+        // Checa sobreposição
+        for (int dy = 0; dy < length; dy++) {
+            if (board[y0 + dy][x0] != 0) return false;
+        }
+        // Posiciona
+        for (int dy = 0; dy < length; dy++) {
+            board[y0 + dy][x0] = 1;
+        }
+    }
+    return true;
+}
+
+void print_ship_coords(int board[ROWS][COLS], const char *nome) {
+    // Percorre o tabuleiro e imprime todos os (X,Y) onde há partes de navio (valor 1)
+    printf("%s - Coordenadas ocupadas (X, Y):\n", nome);
+    for (int y = 0; y < ROWS; y++) {
+        for (int x = 0; x < COLS; x++) {
+            if (board[y][x] == 2) { // marca temporária deste navio
+                printf("  (%d, %d)\n", x + 1, y + 1);
+            }
+        }
+    }
+}
+
+// Marca temporariamente as células do navio atual com 2 para facilitar a impressão,
+// imprime, e depois volta para 1 (célula com navio).
+void mark_and_print_current_ship(int board[ROWS][COLS], int startX, int startY, int length, int orientation, const char *nome) {
+    int x0 = startX - 1;
+    int y0 = startY - 1;
+
+    if (orientation == ORIENT_H) {
+        for (int dx = 0; dx < length; dx++) board[y0][x0 + dx] = 2;
+        print_ship_coords(board, nome);
+        for (int dx = 0; dx < length; dx++) board[y0][x0 + dx] = 1;
+    } else {
+        for (int dy = 0; dy < length; dy++) board[y0 + dy][x0] = 2;
+        print_ship_coords(board, nome);
+        for (int dy = 0; dy < length; dy++) board[y0 + dy][x0] = 1;
+    }
+}
+
+int main(void) {
+    // Tabuleiro 0 = vazio, 1 = parte de navio
+    int board[ROWS][COLS] = {0};
+
+    // ====== ENTRADAS (ajuste aqui conforme desejar) ======
+    // Navio 1 (horizontal): começa em X=2, Y=3, comprimento 4
+    int n1_x = 2, n1_y = 3, n1_len = 4, n1_orient = ORIENT_H;
+
+    // Navio 2 (vertical): começa em X=6, Y=2, comprimento 3
+    int n2_x = 6, n2_y = 2, n2_len = 3, n2_orient = ORIENT_V;
+    // =====================================================
+
+    // Posiciona Navio 1
+    if (!place_ship(board, n1_x, n1_y, n1_len, n1_orient)) {
+        printf("Falha ao posicionar o Navio 1 (verifique limites/sobreposição).\n");
+        return 1;
+    }
+    // Marca temporariamente e imprime as coordenadas do Navio 1
+    mark_and_print_current_ship(board, n1_x, n1_y, n1_len, n1_orient, "Navio 1 (Horizontal)");
+
+    // Posiciona Navio 2
+    if (!place_ship(board, n2_x, n2_y, n2_len, n2_orient)) {
+        printf("Falha ao posicionar o Navio 2 (verifique limites/sobreposição).\n");
+        return 1;
+    }
+    // Marca temporariamente e imprime as coordenadas do Navio 2
+    mark_and_print_current_ship(board, n2_x, n2_y, n2_len, n2_orient, "Navio 2 (Vertical)");
+
+    // (Opcional) Mostrar o tabuleiro final (1 = navio; 0 = vazio)
+    printf("\nTabuleiro (linha Y por coluna X):\n");
+    for (int y = 0; y < ROWS; y++) {
+        for (int x = 0; x < COLS; x++) {
+            printf("%d ", board[y][x]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
